@@ -11,7 +11,7 @@ export default function Login() {
         e.preventDefault();
 
         try {
-            const response = await fetch("http://34.125.14.190:8080/api/user/login", {
+            const response = await fetch("http://api-quiz-arras.my.id:8080/api/user/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Header from "../../components/Header";
 import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function CreateQuestion() {
     const [questions, setQuestions] = useState([
@@ -23,7 +24,7 @@ export default function CreateQuestion() {
         e.preventDefault();
 
         try {
-            const response = await fetch(`http://34.125.14.190:8080/api/question/created-question/${IDQuiz}`, {
+            const response = await fetch(`http://api-quiz-arras.my.id:8080/api/question/created-question/${IDQuiz}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -34,11 +35,15 @@ export default function CreateQuestion() {
 
             if (response.ok) {
                 // Tampilkan popup sukses
-                setShowSuccessPopup(true);
-                setTimeout(() => {
-                    setShowSuccessPopup(false);
-                    navigate("/dashboard-admin");
-                }, 3000);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Your questions have been successfully saved.',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        navigate(`/view-quiz/${IDQuiz}`);
+                    }
+                });
             }
         } catch (error) {
             console.error("An error occurred:", error);
@@ -104,6 +109,7 @@ export default function CreateQuestion() {
                                 placeholder={`Masukkan Pertanyaan ${index + 1}`}
                                 value={question.question}
                                 onChange={(e) => handleQuestionChange(index, "question", e.target.value)}
+                                required
                             />
                         </div>
                         {Object.keys(question.options).map((option, optionIndex) => (
@@ -122,6 +128,7 @@ export default function CreateQuestion() {
                                     placeholder={`Masukkan Pilihan ${option}`}
                                     value={question.options[option]}
                                     onChange={(e) => handleOptionChange(index, option, e.target.value)}
+                                    required
                                 />
                             </div>
                         ))}
@@ -134,6 +141,7 @@ export default function CreateQuestion() {
                                         id={`trueAnswer${index}${option}`}
                                         checked={question.true_answer === option}
                                         onChange={() => handleTrueAnswerChange(index, option)}
+                                        required
                                     />
                                     <label
                                         htmlFor={`trueAnswer${index}${option}`}
@@ -153,13 +161,13 @@ export default function CreateQuestion() {
                     className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md mx-3"
                     onClick={handleAddQuestion}
                 >
-                    Add Question
+                    Add List
                 </button>
                <button
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
                     onClick={() => handleDeleteQuestion(questions.length - 1)}
                 >
-                    Delete Question
+                    Delete List
                 </button>
                  </div>
                 <button

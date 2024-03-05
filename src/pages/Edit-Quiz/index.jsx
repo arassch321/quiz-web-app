@@ -1,78 +1,113 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header";
 import { format } from 'date-fns';
 import Swal from "sweetalert2";
 
-export default function CreateQuiz() {
+export default function EditQuiz() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [startedAt, setstartedAt] = useState("");
     const [finishedAt, setfinishedAt] = useState("");
-    let navigate = useNavigate();
-    
+    const navigate = useNavigate();
+    const { IDQuiz } = useParams();
+
+    useEffect(() => {
+        const fetchQuiz = async () => {
+            try {
+                const response = await fetch(`http://api-quiz-arras.my.id:8080/api/quiz/${IDQuiz}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${sessionStorage.getItem("token") || ""}`,
+                    },
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setTitle(data.payload.Title);
+                    setDescription(data.payload.Description);
+                    setstartedAt(format(new Date(data.payload.StartedAt), "yyyy-MM-dd'T'HH:mm"));
+                    setfinishedAt(format(new Date(data.payload.FinishedAt), "yyyy-MM-dd'T'HH:mm"));
+
+                    
+                } else {
+                    console.error("Failed to fetch quiz:", response.statusText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Failed to fetch quiz data!',
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching quiz data:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'An error occurred!',
+                });
+            }
+        };
+
+        fetchQuiz();
+    }, [IDQuiz]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         const confirmation = await Swal.fire({
-        title: 'Are you sure?',
-        text: 'Do you want to create this quiz?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, create it!'
-    });
+            title: 'Are you sure?',
+            text: 'Do you want to update this quiz?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, update it!'
+        });
 
-    if (confirmation.isConfirmed) {
-        try {
-            const formattedstartedAt = format(new Date(startedAt), "yyyy-MM-dd'T'HH:mm:ssxxx");
-            const formattedfinishedAt = format(new Date(finishedAt), "yyyy-MM-dd'T'HH:mm:ssxxx");
+        if (confirmation.isConfirmed) {
+            try {
+                const formattedStartedAt = format(new Date(startedAt), "yyyy-MM-dd'T'HH:mm:ssxxx");
+                const formattedFinishedAt = format(new Date(finishedAt), "yyyy-MM-dd'T'HH:mm:ssxxx");
 
-            const response = await fetch("http://api-quiz-arras.my.id:8080/api/quiz/created-quiz", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${sessionStorage.getItem("token") || ""}`,
-                },
-                body: JSON.stringify({ title, description, startedAt: formattedstartedAt, finishedAt: formattedfinishedAt }),
-            });
-
-            if (response.ok) {
-                //Tampilkan popup sukses
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Quiz created successfully!',
-                    showConfirmButton: false,
-                    timer: 1500
+                const response = await fetch(`http://api-quiz-arras.my.id:8080/api/quiz/updated-quiz/${IDQuiz}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${sessionStorage.getItem("token") || ""}`,
+                    },
+                    body: JSON.stringify({ title, description, startedAt: formattedStartedAt, finishedAt: formattedFinishedAt }),
                 });
-                navigate("/dashboard-admin");
-            } else {
-                //Tampilkan pesan error jika request gagal
+
+                if (response.ok) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Quiz updated successfully!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    navigate("/dashboard-admin");
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Failed to update quiz!',
+                    });
+                }
+            } catch (error) {
+                console.error("An error occurred:", error);
                 await Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
-                    text: 'Failed to create quiz!',
+                    text: 'An error occurred!',
                 });
             }
         }
-        catch (error) {
-            //Tampilkan pesan error jika terjadi kesalahan
-            console.error("An error occurred:", error);
-            await Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'An error occurred!',
-            });
-        }
-    }
-    }
+    };
 
     return (
         <div className="mx-5 px-[15%] pt-24">
             <Header />
-            <h1 className="text-3xl font-bold text-center mb-10">Create Quiz</h1>
+            <h1 className="text-3xl font-bold text-center mb-10">Edit Quiz</h1>
             <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                 <div>
                     <label htmlFor="title" className="block mb-2 text-sm font-medium text-gray-900">Title</label>
@@ -82,7 +117,7 @@ export default function CreateQuiz() {
                         type="text"
                         name="title"
                         id="title"
-                        placeholder="Masukkan Judul"
+                        placeholder="Enter Title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
@@ -95,7 +130,7 @@ export default function CreateQuiz() {
                         sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                         name="description"
                         id="description"
-                        placeholder="Masukkan Deskripsi"
+                        placeholder="Enter Description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         required
@@ -133,7 +168,7 @@ export default function CreateQuiz() {
                     type="submit"
                     className="bg-indigo-500 w-full text-white hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
                 >
-                    Create
+                    Update
                 </button>
             </form>
         </div>

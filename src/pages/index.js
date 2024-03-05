@@ -1,5 +1,6 @@
 export {default as CreateQuiz} from './Create-Quiz'
 export {default as CreateQuestion} from './Create-Question'
 export {default as DashboardAdmin} from './Dashboard-Admin'
+export {default as EditQuiz} from './Edit-Quiz'
 export {default as Login} from './Login'
 export {default as ViewQuiz} from './View-Quiz'
